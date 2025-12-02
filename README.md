@@ -77,11 +77,6 @@ observer:
   longitude: -75.2437  # Your Longitude
   radius_nm: 50        # Range ring radius
 ```
-3. Leave the Virtual Environment when done:
-
-```
-deactivate
-```
 
 ### How to Obtain API Keys
 

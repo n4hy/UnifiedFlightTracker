@@ -32,4 +32,4 @@ Open your web browser and navigate to:http://localhost:5000Map LegendThe map use
 │
 ├── config.yaml            # [IGNORED] Secrets & Config
 └── venv/                  # [IGNORED] Virtual Environment
-ContributingContributions, issues, and feature requests are welcome!Fork the ProjectCreate your Feature Branch (git checkout -b feature/AmazingFeature)Commit your Changes (git commit -m 'Add some AmazingFeature')Push to the Branch (git push origin feature/AmazingFeature)Open a Pull RequestBuilt with using Python and Flask
+ContributingContributions, issues, and feature requests are welcome!Fork the ProjectCreate your Feature Branch (git checkout -b feature/AmazingFeature)Commit your Changes (git commit -m 'Add some AmazingFeature')Push to the Branch (git push origin feature/AmazingFeature)Open a Pull RequestBuilt with Python and Flask

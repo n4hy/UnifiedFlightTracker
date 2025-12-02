@@ -80,7 +80,7 @@ observer:
 3. Leave the Virtual Environment when done:
 
 ```
-deactive
+deactivate
 ```
 
 ### How to Obtain API Keys

@@ -8,22 +8,22 @@ Unified Flight Tracker fuses real-time telemetry from FlightAware and Flightrada
 
 ## Features
 
-- **Multi-Source Data Fusion** — Ingests and normalizes data from:
+- **Multi-Source Data Fusion** - Ingests and normalizes data from:
   - FlightAware AeroAPI v4
   - Flightradar24 Commercial API
 
-- **Smart Deconfliction** — Merges duplicate aircraft based on:
+- **Smart Deconfliction** - Merges duplicate aircraft based on:
   - ICAO Hex codes
   - Spatial matching within a 6 NM threshold
   - Ensures a clean, deduplicated aircraft map
 
-- **Freshest Data Priority** — Automatically selects the most recent telemetry timestamp from either provider.
+- **Freshest Data Priority** - Automatically selects the most recent telemetry timestamp from either provider.
 
 - **Tactical Dashboard**
   - **Left Panel:** Sortable live flight table (Altitude, Speed, Heading, Distance)
   - **Right Panel:** Full-screen Google Map with range rings + directional aircraft icons
 
-- **Observer-Centric Tracking** — Computes real-time bearing and distance (NM) from your configured observer location.
+- **Observer-Centric Tracking** - Computes real-time bearing and distance (NM) from your configured observer location.
 
 ---
 
@@ -104,7 +104,7 @@ The application generates its configuration file on first run.
 python flight_tracker.py
 ```
 
-### 2. Edit the generated `config.yaml`
+### 2. Edit the generated config.yaml
 
 ```yaml
 api_keys:
@@ -140,7 +140,7 @@ python flight_tracker.py
 
 Open your browser:
 
-```
+```text
 http://localhost:5000
 ```
 
@@ -160,7 +160,7 @@ http://localhost:5000
 
 ## Repository Structure
 
-```
+```text
 FlightTracker/
 ├── flight_tracker.py      # Main application logic
 ├── README.md              # Documentation

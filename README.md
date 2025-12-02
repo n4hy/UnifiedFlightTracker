@@ -1,165 +1,121 @@
 # Unified Flight Tracker
-*A Professional Multi-Source Aviation Dashboard*
 
-Unified Flight Tracker fuses real-time telemetry from FlightAware and Flightradar24 into a unified operational picture. It eliminates "ghost" aircraft via smart deconfliction algorithms and always displays the freshest available data.
+**A Professional Multi-Source Aviation Dashboard**
 
----
+Unified Flight Tracker fuses real-time telemetry from **FlightAware** and **Flightradar24** into a single, cohesive operational picture. It eliminates "ghost" aircraft through smart deconfliction algorithms and prioritizes the freshest data available.
 
 ## Features
 
-- **Multi-Source Data Fusion**  
-  Ingests and normalizes data from:  
-  - FlightAware AeroAPI v4  
-  - Flightradar24 Commercial API  
-
-- **Smart Deconfliction**  
-  Merges duplicate aircraft based on:  
-  - ICAO Hex codes  
-  - Spatial matching within a 6 NM threshold  
-  Ensures a clean, deduplicated aircraft map.
-
-- **Freshest Data Priority**  
-  Automatically selects the most recent telemetry timestamp from either provider.
-
-- **Tactical Dashboard**  
-  - **Left Panel:** Sortable live flight table (Altitude, Speed, Heading, Distance).  
-  - **Right Panel:** Full-screen Google Map with range rings + directional aircraft icons.
-
-- **Observer-Centric Tracking**  
-  Computes real-time bearing and distance (NM) from your configured observer location.
-
----
+* **Multi-Source Data Fusion:** Ingests and normalizes data from FlightAware AeroAPI v4 and Flightradar24 Commercial API.
+* **Smart Deconfliction:** Merges duplicate aircraft using ICAO Hex codes and spatial matching (6NM threshold) to ensure a clean map.
+* **"Freshest Data" Priority:** Automatically compares timestamps to display the most recent position report from either source.
+* **Tactical Dashboard:**
+  * **Left Panel:** Live, sortable flight table (Altitude, Speed, Heading, Distance).
+  * **Right Panel:** Full-screen Google Map with range rings and directional icons.
+* **Observer Centric:** Calculates real-time distance from your specific location to every aircraft.
 
 ## Installation Guide
 
-Follow these steps to deploy the tracker locally.
+Follow these steps to deploy the tracker on your local machine.
 
 ### 1. Prerequisites
 
-Ensure Python 3.10+ is installed:
+Ensure you have Python 3.10+ installed.
 
 ```bash
 python --version
 ```
 
-### 2. Initialize the Project Directory
+### 2. Initialize the Repository
+
+Create your project folder and set up a virtual environment to keep dependencies clean.
 
 ```bash
+# Create directory
 mkdir FlightTracker
 cd FlightTracker
-```
 
-### 3. Create and Activate Virtual Environment
-
-```bash
+# Create Virtual Environment
 python -m venv venv
-```
 
-**Activate (Mac/Linux):**
-```bash
+# Activate Environment
+# Windows:
+venv\Scripts\activate
+# Mac/Linux:
 source venv/bin/activate
 ```
 
-**Activate (Windows CMD):**
-```bash
-venv\Scripts\activate
-```
+### 3. Install Dependencies
 
-**Activate (Windows PowerShell):**
-```bash
-.\venv\Scripts\Activate.ps1
-```
-
----
-
-### 4. Install Dependencies
+Install the required Python packages (flask, requests, pyyaml).
 
 ```bash
 pip install flask requests pyyaml
 ```
 
-Optional but recommended:
-
-```bash
-pip freeze > requirements.txt
-```
-
----
-
-## How to Deactivate the Virtual Environment
-
-Return to your system Python environment:
-
-```bash
-deactivate
-```
-
----
-
 ## Configuration
 
-The application generates its configuration file on first run.
+The application uses a `config.yaml` file to manage API keys and your location.
 
-### 1. Auto-generate the config file
+1. Run the script once to auto-generate the file:
 
 ```bash
 python flight_tracker.py
 ```
 
-### 2. Edit the generated `config.yaml`
+2. Edit the generated `config.yaml` file:
 
 ```yaml
 api_keys:
+  # Leave default text if you do not have a specific key
   flightaware: "YOUR_FLIGHTAWARE_API_KEY"
   flightradar24: "YOUR_FR24_API_TOKEN"
   google_maps: "YOUR_GOOGLE_MAPS_API_KEY"
 
 observer:
-  latitude: 39.8729      # Your latitude
-  longitude: -75.2437    # Your longitude
-  radius_nm: 50          # Range ring radius (nautical miles)
+  latitude: 39.8729    # Your Latitude
+  longitude: -75.2437  # Your Longitude
+  radius_nm: 50        # Range ring radius
+```
+3. Leave the Virtual Environment when done:
+
+```
+deactivate
 ```
 
 ### How to Obtain API Keys
 
-| Service        | Plan Required               | Where to Get It              |
-|----------------|-----------------------------|------------------------------|
-| FlightAware    | Personal / AeroAPI          | FlightAware Developer Portal |
-| Flightradar24  | Commercial / Explorer Tier  | FR24 API Portal              |
-| Google Maps    | Standard (Free Tier)        | Google Cloud Console         |
+| Service | Plan Required | Where to get it |
+| :--- | :--- | :--- |
+| **FlightAware** | Personal / AeroAPI | [Developer Portal](https://www.flightaware.com/aeroapi/portal) |
+| **Flightradar24** | Commercial / Explorer | [FR24 API Portal](https://fr24api.flightradar24.com/) |
+| **Google Maps** | Standard (Free Tier) | [Google Cloud Console](https://console.cloud.google.com/) |
 
-**Important:** FR24 requires a **Commercial API token**, not the feeder key.  
-If you lack a token, the app simply ignores that provider.
-
----
+> **Note:** The Flightradar24 key required is for the **Commercial API**, not the personal feeder key. If you do not have a specific key, simply leave the default placeholder in `config.yaml` and the app will ignore that source.
 
 ## Usage
 
-Start the local web server:
+Once configured, start the server:
 
 ```bash
 python flight_tracker.py
 ```
 
-Open your browser:
+Open your web browser and navigate to:
 
-```text
-http://localhost:5000
-```
-
----
+**http://localhost:5000**
 
 ## Map Legend
 
-| Symbol | Color | Meaning                                |
-|--------|--------|----------------------------------------|
-| House  | Green  | Your observer location                 |
-| Circle | Red    | Range boundary (from config)           |
-| Plane  | Blue   | FlightAware-only aircraft              |
-| Plane  | Gold   | Flightradar24-only aircraft            |
-| Plane  | Purple | Merged aircraft (both sources)         |
+The map uses color-coded symbols to indicate the source and status of each aircraft.
 
----
+| Symbol | Color | Meaning |
+| :---: | :--- | :--- |
+| House | **Green** | **Observer Location** (You) |
+| Circle | **Red** | **Range Limit** (Defined in config) |
+| Plane | **Blue** | Data sourced uniquely from **FlightAware** |
+| Plane | **Gold** | Data sourced uniquely from **Flightradar24** |
+| Plane | **Purple** | **Merged Target** (Confirmed by both sources) |
 
 ## Repository Structure
 
@@ -170,35 +126,20 @@ FlightTracker/
 ├── README.md              # Documentation
 ├── .gitignore             # Git configuration
 │
-├── config.yaml            # [IGNORED] Secrets & Observer Config
-└── venv/                  # [IGNORED] Python virtual environment
+├── config.yaml            # [IGNORED] Secrets & Config
+└── venv/                  # [IGNORED] Virtual Environment
 ```
-
----
 
 ## Contributing
 
-Contributions are welcome.
+Contributions, issues, and feature requests are welcome!
 
-1. Fork the repository  
-2. Create a feature branch:  
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
+---
 
-3. Commit your changes:  
-
-   ```bash
-   git commit -m "Add AmazingFeature"
-   ```
-
-4. Push the branch:  
-
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-
-5. Submit a Pull Request
-
-Built with Python and Flask.
+_Built with Python and Flask_

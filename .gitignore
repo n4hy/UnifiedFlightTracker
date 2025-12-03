@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+app.log
+venv/
+.DS_Store
+config.yaml

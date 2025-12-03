@@ -101,7 +101,7 @@ The application generates its configuration file on first run.
 ### 1. Auto-generate the config file
 
 ```bash
-python flight_tracker.py
+python app.py
 ```
 
 ### 2. Edit the generated config.yaml
@@ -135,13 +135,23 @@ observer:
 Start the local web server:
 
 ```bash
-python flight_tracker.py
+python app.py
 ```
 
 Open your browser:
 
 ```text
 http://localhost:5000
+```
+
+---
+
+## Testing
+
+To run the unit tests for the core logic and utilities:
+
+```bash
+python tests/test_logic.py
 ```
 
 ---
@@ -162,10 +172,21 @@ http://localhost:5000
 
 ```text
 FlightTracker/
-├── flight_tracker.py      # Main application logic
+├── app.py                 # Application entry point
+├── config.yaml            # [IGNORED] Secrets & Observer Config
 ├── README.md              # Documentation
 ├── .gitignore             # Git configuration
-├── config.yaml            # [IGNORED] Secrets & Observer Config
+├── requirements.txt       # Python dependencies (optional)
+├── templates/
+│   └── index.html         # Frontend HTML/JS dashboard
+├── tests/
+│   └── test_logic.py      # Unit tests
+├── tracker/               # Backend Package
+│   ├── __init__.py
+│   ├── api.py             # Data ingestion (FA/FR24)
+│   ├── config.py          # Configuration management
+│   ├── core.py            # Deconfliction logic
+│   └── geo.py             # Geodesic math helpers
 └── venv/                  # [IGNORED] Python virtual environment
 ```
 

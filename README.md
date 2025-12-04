@@ -4,6 +4,8 @@
 
 Unified Flight Tracker fuses real-time telemetry from **local ADS-B receivers** (Piaware/Dump1090), FlightAware, and Flightradar24 into a unified operational picture. It eliminates "ghost" aircraft via smart deconfliction algorithms and prioritizes local data for the freshest possible tracking.
 
+Code by Jules and me. 
+
 ---
 
 ## Features

@@ -21,9 +21,40 @@
             z-index: 10;
         }
 
-        /* Right Map (60%) */
-        #map-wrapper { width: 60%; height: 100%; position: relative; }
-        #map { height: 100%; width: 100%; }
+        /* Right Map Container (60%) */
+        #right-panel { width: 60%; height: 100%; position: relative; }
+        #map { height: 100%; width: 100%; display: block; }
+        #sky-view { height: 100%; width: 100%; display: none; background: #111; position: relative; }
+
+        /* View Toggle Tabs */
+        .view-tabs {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            display: flex;
+            overflow: hidden;
+        }
+        .view-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        .view-tab.active {
+            background: #4285F4;
+            color: white;
+        }
+        .view-tab:hover:not(.active) {
+            background: #f1f1f1;
+        }
 
         /* Dashboard Components */
         .header { padding: 15px; background: #fff; border-bottom: 1px solid #eee; }
@@ -73,6 +104,19 @@
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
 
+        /* Sky View Tooltip */
+        #sky-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+            display: none;
+            font-size: 12px;
+            z-index: 100;
+        }
+
     </style>
     <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}"></script>
 </head>
@@ -98,10 +142,9 @@
                         <th onclick="toggleSort('hex_id')">ICAO <span id="sort-hex_id" class="sort-icon"></span></th>
                         <th onclick="toggleSort('callsign')">Ident <span id="sort-callsign" class="sort-icon"></span></th>
                         <th class="col-right" onclick="toggleSort('altitude')">Alt (ft) <span id="sort-altitude" class="sort-icon"></span></th>
-                        <th class="col-right" onclick="toggleSort('speed')">Spd (kts) <span id="sort-speed" class="sort-icon"></span></th>
+                        <th class="col-right" onclick="toggleSort('azimuth')">Az <span id="sort-azimuth" class="sort-icon"></span></th>
+                        <th class="col-right" onclick="toggleSort('elevation')">El <span id="sort-elevation" class="sort-icon"></span></th>
                         <th class="col-right" onclick="toggleSort('distance_from_obs')">Dist (NM) <span id="sort-distance_from_obs" class="sort-icon"></span></th>
-                        <th onclick="toggleSort('source')">Source <span id="sort-source" class="sort-icon"></span></th>
-                        <th class="col-right" onclick="toggleSort('heading')">Hdg <span id="sort-heading" class="sort-icon"></span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,8 +154,18 @@
         </div>
     </div>
 
-    <div id="map-wrapper">
+    <div id="right-panel">
+        <div class="view-tabs">
+            <button class="view-tab active" id="btn-map" onclick="switchView('map')">Map</button>
+            <button class="view-tab" id="btn-sky" onclick="switchView('sky')">Sky View</button>
+        </div>
+
         <div id="map"></div>
+
+        <div id="sky-view">
+             <canvas id="skyCanvas"></canvas>
+             <div id="sky-tooltip"></div>
+        </div>
     </div>
 </div>
 
@@ -127,6 +180,10 @@
     let sortState = { col: null, dir: 0 };
     let flightCache = [];
     
+    // View State
+    let currentView = 'map'; // 'map' or 'sky'
+    let skyCanvas, skyCtx;
+
     const planeIcon = {
         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
         scale: 4,
@@ -148,6 +205,7 @@
     };
 
     function initMap() {
+        // Map Init
         const startPos = { lat: {{ default_lat }}, lng: {{ default_lon }} }; 
         map = new google.maps.Map(document.getElementById("map"), {
             zoom: 9,
@@ -159,7 +217,31 @@
         });
         
         drawObserver(startPos.lat, startPos.lng, {{ default_radius }});
+
+        // Sky View Init
+        skyCanvas = document.getElementById('skyCanvas');
+        skyCtx = skyCanvas.getContext('2d');
+        resizeSkyCanvas();
+        window.addEventListener('resize', resizeSkyCanvas);
+
+        // Sky View Interaction
+        skyCanvas.addEventListener('mousemove', handleSkyHover);
+
         startTracking();
+    }
+
+    function switchView(view) {
+        currentView = view;
+        document.getElementById('btn-map').className = view === 'map' ? 'view-tab active' : 'view-tab';
+        document.getElementById('btn-sky').className = view === 'sky' ? 'view-tab active' : 'view-tab';
+
+        document.getElementById('map').style.display = view === 'map' ? 'block' : 'none';
+        document.getElementById('sky-view').style.display = view === 'sky' ? 'block' : 'none';
+
+        if (view === 'sky') {
+            resizeSkyCanvas();
+            drawSkyView(flightCache);
+        }
     }
 
     function updateSettings() {
@@ -224,8 +306,11 @@
                  statusDiv.innerHTML = `Tracking ${data.flights.length} aircraft. Updated: ${new Date().toLocaleTimeString()}`;
             }
             
+            flightCache = data.flights; // Store for sorting/rendering
+
             updateMarkers(data.flights);
-            flightCache = data.flights; // Store for sorting
+            if (currentView === 'sky') drawSkyView(data.flights);
+
             renderTable(); // Render based on cache and sort state
             
         } catch (error) {
@@ -255,7 +340,7 @@
             
             icon.fillColor = color;
 
-            const contentString = `<div style="color:black"><b>${f.callsign}</b><br>Hex: ${f.hex_id}</div>`;
+            const contentString = `<div style="color:black"><b>${f.callsign}</b><br>Hex: ${f.hex_id}<br>Alt: ${f.altitude}ft<br>Az: ${f.azimuth}° El: ${f.elevation}°</div>`;
 
             if (markers[f.hex_id]) {
                 markers[f.hex_id].setPosition(pos);
@@ -272,6 +357,164 @@
                 markers[f.hex_id] = marker;
             }
         });
+    }
+
+    // --- SKY VIEW LOGIC ---
+    function resizeSkyCanvas() {
+        const parent = document.getElementById('sky-view');
+        skyCanvas.width = parent.clientWidth;
+        skyCanvas.height = parent.clientHeight;
+        if (currentView === 'sky') drawSkyView(flightCache);
+    }
+
+    function drawSkyView(flights) {
+        const w = skyCanvas.width;
+        const h = skyCanvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const r = Math.min(cx, cy) - 40; // Max radius with padding
+
+        // Clear
+        skyCtx.clearRect(0, 0, w, h);
+
+        // Draw Background Rings
+        skyCtx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        skyCtx.lineWidth = 1;
+        skyCtx.setLineDash([5, 5]); // Dotted
+
+        // Elevations: 0, 30, 60. Center is 90.
+        // Radius mapping: r_pixel = R_max * (1 - el/90)
+
+        // Ring for 0 deg (Horizon) - Solid
+        skyCtx.beginPath();
+        skyCtx.arc(cx, cy, r, 0, 2 * Math.PI);
+        skyCtx.stroke();
+
+        // Ring for 30 deg
+        const r30 = r * (1 - 30/90);
+        skyCtx.beginPath();
+        skyCtx.arc(cx, cy, r30, 0, 2 * Math.PI);
+        skyCtx.stroke();
+
+        // Ring for 60 deg
+        const r60 = r * (1 - 60/90);
+        skyCtx.beginPath();
+        skyCtx.arc(cx, cy, r60, 0, 2 * Math.PI);
+        skyCtx.stroke();
+
+        skyCtx.setLineDash([]); // Reset
+
+        // Draw Crosshairs (N-S, E-W)
+        skyCtx.beginPath();
+        skyCtx.moveTo(cx, cy - r);
+        skyCtx.lineTo(cx, cy + r);
+        skyCtx.moveTo(cx - r, cy);
+        skyCtx.lineTo(cx + r, cy);
+        skyCtx.stroke();
+
+        // Draw Labels (N, E, S, W)
+        skyCtx.fillStyle = "white";
+        skyCtx.font = "bold 14px Arial";
+        skyCtx.textAlign = "center";
+        skyCtx.textBaseline = "middle";
+
+        skyCtx.fillText("N", cx, cy - r - 15);
+        skyCtx.fillText("S", cx, cy + r + 15);
+        skyCtx.fillText("E", cx + r + 15, cy);
+        skyCtx.fillText("W", cx - r - 15, cy);
+
+        skyCtx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        skyCtx.font = "10px Arial";
+        skyCtx.fillText("30°", cx + r30 + 10, cy + 10);
+        skyCtx.fillText("60°", cx + r60 + 10, cy + 10);
+
+        // Plot Aircraft
+        flights.forEach(f => {
+            if (f.elevation < 0) return; // Below horizon
+
+            const azRad = (f.azimuth - 90) * (Math.PI / 180); // Canvas 0 is Right (East), Az 0 is Up (North).
+            // Azimuth is clockwise from North. Canvas angle is clockwise from East (usually).
+            // Actually Math functions use counter-clockwise from East?
+            // Let's manually map:
+            // N (Az 0) -> (0, -r)
+            // E (Az 90) -> (r, 0)
+            // S (Az 180) -> (0, r)
+            // W (Az 270) -> (-r, 0)
+
+            // x = r_pixel * sin(Az)
+            // y = -r_pixel * cos(Az)  (Negative because Y is down)
+
+            const r_pixel = r * (1 - f.elevation / 90);
+
+            const x = cx + r_pixel * Math.sin(f.azimuth * Math.PI / 180);
+            const y = cy - r_pixel * Math.cos(f.azimuth * Math.PI / 180);
+
+            // Store coordinates for tooltip
+            f._skyX = x;
+            f._skyY = y;
+
+            // Draw Dot
+            skyCtx.beginPath();
+            skyCtx.arc(x, y, 4, 0, 2 * Math.PI);
+
+            let color = "#4285F4";
+            if (f.source.includes("Merged")) color = "#800080";
+            else if (f.source.includes("Local")) color = "#0F9D58";
+            else if (f.source === "Flightradar24") color = "#FFD700";
+
+            skyCtx.fillStyle = color;
+            skyCtx.fill();
+            skyCtx.strokeStyle = "white";
+            skyCtx.stroke();
+
+            // Optional: Heading Indicator
+            // Small line pointing in heading direction
+            // Heading is clockwise from North
+            const hdgRad = (f.heading - 90) * (Math.PI / 180);
+            // Standard math angle is ccw from East.
+            // Hdg 0 (N) -> -90 deg standard? No.
+            // Hdg 0 should point Up.
+            // x_h = x + len * sin(Hdg)
+            // y_h = y - len * cos(Hdg)
+
+            skyCtx.beginPath();
+            skyCtx.moveTo(x, y);
+            skyCtx.lineTo(x + 10 * Math.sin(f.heading * Math.PI/180), y - 10 * Math.cos(f.heading * Math.PI/180));
+            skyCtx.strokeStyle = color;
+            skyCtx.stroke();
+        });
+    }
+
+    function handleSkyHover(e) {
+        if (currentView !== 'sky') return;
+
+        const rect = skyCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const tooltip = document.getElementById('sky-tooltip');
+        let found = null;
+
+        // Simple hit detection
+        for (let f of flightCache) {
+            if (f._skyX && f.elevation >= 0) {
+                const dx = mouseX - f._skyX;
+                const dy = mouseY - f._skyY;
+                if (dx*dx + dy*dy < 100) { // 10px radius
+                    found = f;
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (mouseX + 10) + 'px';
+            tooltip.style.top = (mouseY + 10) + 'px';
+            tooltip.innerHTML = `<b>${found.callsign}</b><br>Alt: ${found.altitude}ft<br>Az: ${found.azimuth}° El: ${found.elevation}°`;
+        } else {
+            tooltip.style.display = 'none';
+        }
     }
 
     // --- SORTING LOGIC ---
@@ -341,15 +584,15 @@
                 <td style="font-family:monospace; font-weight:bold;">${f.hex_id.toUpperCase()}</td>
                 <td>${f.callsign}</td>
                 <td class="col-right">${f.altitude.toLocaleString()}</td>
-                <td class="col-right">${Math.round(f.speed)}</td>
+                <td class="col-right">${f.azimuth !== undefined ? f.azimuth.toFixed(0) : 0}°</td>
+                <td class="col-right">${f.elevation !== undefined ? f.elevation.toFixed(1) : 0}°</td>
                 <td class="col-right">${distDisplay}</td>
-                <td>${sourceHtml}</td>
-                <td class="col-right">${Math.round(f.heading)}°</td>
             `;
             
             // Highlight marker on hover/click
             tr.onclick = () => {
-                if (markers[f.hex_id]) {
+                // If on Sky View, could highlight there too, but mostly for Map
+                if (currentView === 'map' && markers[f.hex_id]) {
                     const m = markers[f.hex_id];
                     map.panTo(m.getPosition());
                     m._infoWindow.setContent(m._infoContent);

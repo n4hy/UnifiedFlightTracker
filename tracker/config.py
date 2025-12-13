@@ -16,6 +16,7 @@ DEFAULT_CONFIG = {
     "observer": {
         "latitude": 39.8729,
         "longitude": -75.2437,
+        "altitude_m": 0,
         "radius_nm": 50
     },
     "server": {

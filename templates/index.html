@@ -78,7 +78,11 @@
         function gm_authFailure() {
             var msg = 'Google Maps Authentication Failed. \n\nPlease check the browser console (F12) for specific errors. \nCommon causes: \n1. Invalid API Key \n2. "Maps JavaScript API" not enabled \n3. Billing not enabled on Google Cloud Project';
             alert(msg);
-            document.getElementById('map').innerHTML = '<div style="padding:20px; color:#d93025; font-weight:bold; text-align:center; padding-top: 100px;">' + msg.replace(/\n/g, '<br>') + '</div>';
+            var errorHtml = '<div style="padding:20px; color:#d93025; font-weight:bold; text-align:center; padding-top: 100px;">' +
+                            msg.replace(/\n/g, '<br>') +
+                            '<br><br><a href="https://console.cloud.google.com/google/maps-apis/api-list" target="_blank" style="color:#4285F4; text-decoration:underline;">Check Google Cloud Console</a>' +
+                            '</div>';
+            document.getElementById('map').innerHTML = errorHtml;
         }
     </script>
     {% if not api_key or api_key == "YOUR_GOOGLE_MAPS_API_KEY" %}

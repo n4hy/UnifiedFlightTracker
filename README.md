@@ -108,8 +108,8 @@ local_sources:
   dump978: "http://localhost:8978/data/aircraft.json"  # Or /run/dump978-fa/aircraft.json
 
 observer:
-  latitude: 39.8729      # Your latitude
-  longitude: -75.2437    # Your longitude
+  latitude: 39.0         # Your latitude
+  longitude: -75.0       # Your longitude
   radius_nm: 50          # Range ring radius (nautical miles)
 
 # Optional: API Rate Limiting (Caching)

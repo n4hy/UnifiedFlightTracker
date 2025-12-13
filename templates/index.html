@@ -122,7 +122,8 @@
     let rangeCircle;
     let observerMarker; // House icon marker
     let refreshInterval;
-    
+    let zoomControlTimer;
+
     // Sort State: { col: string, dir: number } (0: none, 1: asc, 2: desc)
     let sortState = { col: null, dir: 0 };
     let flightCache = [];
@@ -155,11 +156,30 @@
             mapTypeId: 'terrain',
             streetViewControl: false,
             fullscreenControl: false,
+            zoomControl: false, // Initially hidden
             mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT }
         });
+
+        // Event listeners to show zoom controls
+        map.addListener('click', showZoomControls);
+        map.addListener('dragstart', showZoomControls);
+        map.addListener('zoom_changed', showZoomControls);
         
         drawObserver(startPos.lat, startPos.lng, {{ default_radius }});
         startTracking();
+    }
+
+    function showZoomControls() {
+        // Show controls
+        map.setOptions({ zoomControl: true });
+
+        // Reset timer
+        if (zoomControlTimer) clearTimeout(zoomControlTimer);
+
+        // Hide after 10 seconds
+        zoomControlTimer = setTimeout(() => {
+            map.setOptions({ zoomControl: false });
+        }, 10000);
     }
 
     function updateSettings() {

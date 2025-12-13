@@ -17,6 +17,7 @@ def index():
     config = load_config()
     return render_template('index.html',
                           api_key=config['api_keys'].get('google_maps', ''),
+                          map_id=config['api_keys'].get('map_id', 'DEMO_MAP_ID'),
                           default_lat=config['observer']['latitude'],
                           default_lon=config['observer']['longitude'],
                           default_radius=config['observer']['radius_nm'])

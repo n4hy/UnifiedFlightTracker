@@ -13,7 +13,8 @@ DEFAULT_CONFIG = {
     "api_keys": {
         "flightaware": "YOUR_FLIGHTAWARE_API_KEY",
         "flightradar24": "YOUR_FR24_API_TOKEN",
-        "google_maps": "YOUR_GOOGLE_MAPS_API_KEY"
+        "google_maps": "YOUR_GOOGLE_MAPS_API_KEY",
+        "map_id": "DEMO_MAP_ID"
     },
     "local_sources": {
         "dump1090": "/run/dump1090-fa/aircraft.json",

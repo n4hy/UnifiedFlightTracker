@@ -147,31 +147,28 @@
     let sortState = { col: null, dir: 0 };
     let flightCache = [];
     
-    const planeIcon = {
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        scale: 4,
-        fillColor: "#4285F4",
-        fillOpacity: 1,
-        strokeWeight: 1,
-        rotation: 0
-    };
+    function createPlaneElement(color, rotation) {
+        const div = document.createElement('div');
+        div.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" style="transform: rotate(${rotation}deg); width: 24px; height: 24px;">
+            <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" fill="${color}" stroke="white" stroke-width="1" />
+        </svg>`;
+        return div.firstElementChild;
+    }
 
-    const houseIcon = {
-        // SVG path for a simple house
-        path: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
-        fillColor: "#0F9D58", // Green
-        fillOpacity: 1,
-        strokeWeight: 2,
-        strokeColor: "#FFFFFF",
-        scale: 1.5,
-        anchor: new google.maps.Point(12, 12) // Center the icon roughly
-    };
+    function createHouseElement() {
+        const div = document.createElement('div');
+        div.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="#0F9D58" stroke="white" stroke-width="2" />
+        </svg>`;
+        return div.firstElementChild;
+    }
 
     function initMap() {
         const startPos = { lat: {{ default_lat }}, lng: {{ default_lon }} }; 
         map = new google.maps.Map(document.getElementById("map"), {
             zoom: 9,
             center: startPos,
+            mapId: "{{ map_id }}", // Required for AdvancedMarkerElement
             mapTypeId: 'terrain',
             streetViewControl: false,
             fullscreenControl: false,
@@ -228,13 +225,13 @@
         map.fitBounds(rangeCircle.getBounds());
 
         // Draw/Update House Icon
-        if (observerMarker) observerMarker.setMap(null);
-        observerMarker = new google.maps.Marker({
-            position: pos,
+        if (observerMarker) observerMarker.map = null;
+        observerMarker = new google.maps.marker.AdvancedMarkerElement({
             map: map,
-            icon: houseIcon,
+            position: pos,
+            content: createHouseElement(),
             title: "Observer Location",
-            zIndex: 1000 // Ensure it stays on top of planes
+            zIndex: 1000
         });
     }
 
@@ -279,31 +276,37 @@
         
         for (let hex in markers) {
             if (!currentHexIds.has(hex)) {
-                markers[hex].setMap(null);
+                markers[hex].map = null;
                 delete markers[hex];
             }
         }
         flights.forEach(f => {
             const pos = { lat: f.lat, lng: f.lon };
-            const icon = { ...planeIcon, rotation: f.heading };
             
             let color = "#4285F4"; // FA Blue
             if (f.source.includes("Merged")) color = "#800080"; // Merged Purple
             else if (f.source.includes("Local")) color = "#0F9D58"; // Local Green
             else if (f.source === "Flightradar24") color = "#FFD700"; // FR24 Gold
             
-            icon.fillColor = color;
-
             const contentString = `<div style="color:black"><b>${f.callsign}</b><br>Hex: ${f.hex_id}</div>`;
 
             if (markers[f.hex_id]) {
-                markers[f.hex_id].setPosition(pos);
-                markers[f.hex_id].setIcon(icon);
+                markers[f.hex_id].position = pos;
+                // Update rotation and color by replacing content or transforming it
+                // Re-creating content is safest for color changes
+                markers[f.hex_id].content = createPlaneElement(color, f.heading);
                 markers[f.hex_id]._infoContent = contentString;
             } else {
-                const marker = new google.maps.Marker({ position: pos, map: map, icon: icon, title: f.callsign });
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: map,
+                    position: pos,
+                    content: createPlaneElement(color, f.heading),
+                    title: f.callsign
+                });
+
                 marker._infoWindow = new google.maps.InfoWindow({ content: contentString });
                 marker._infoContent = contentString;
+
                 marker.addListener("click", () => {
                      marker._infoWindow.setContent(marker._infoContent);
                      marker._infoWindow.open(map, marker);
@@ -411,7 +414,7 @@
     // window.onload = initMap; // Removed in favor of callback
 </script>
 {% if api_key and api_key != "YOUR_GOOGLE_MAPS_API_KEY" %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&loading=async&callback=initMap" async defer onerror="alert('Failed to load Google Maps script. Check network connection.')"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&loading=async&libraries=marker&callback=initMap" async defer onerror="alert('Failed to load Google Maps script. Check network connection.')"></script>
 {% endif %}
 </body>
 </html>

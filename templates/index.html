@@ -171,8 +171,7 @@
         drawObserver(lat, lon, rad);
         
         if (refreshInterval) clearInterval(refreshInterval);
-        // poll_interval_ms comes from server template rendering
-        refreshInterval = setInterval(fetchFlights, {{ poll_interval_ms }});
+        refreshInterval = setInterval(fetchFlights, 5000);
         fetchFlights();
     }
 
@@ -201,7 +200,7 @@
     }
 
     function startTracking() {
-        refreshInterval = setInterval(fetchFlights, {{ poll_interval_ms }});
+        refreshInterval = setInterval(fetchFlights, 5000);
         fetchFlights();
     }
 

@@ -122,7 +122,7 @@ The `api_caching` section controls how often the application fetches data from F
   - Default: `60` (updates every minute).
   - Setting this lower increases API usage and potential costs.
   - Setting this higher saves API quota but delays flight updates.
-  - The frontend dashboard automatically adjusts its polling frequency to match this value.
+  - **Note:** The dashboard polls every 5 seconds to show real-time local data. External API data is cached server-side and only refreshes when this TTL expires.
 
 ### How to Obtain API Keys
 

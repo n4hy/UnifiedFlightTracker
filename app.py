@@ -15,14 +15,11 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     config = load_config()
-    # Default to 60s if not set
-    ttl = config.get('api_caching', {}).get('ttl_seconds', 60)
     return render_template('index.html',
                           api_key=config['api_keys'].get('google_maps', ''),
                           default_lat=config['observer']['latitude'],
                           default_lon=config['observer']['longitude'],
-                          default_radius=config['observer']['radius_nm'],
-                          poll_interval_ms=ttl * 1000)
+                          default_radius=config['observer']['radius_nm'])
 
 @app.route('/api/flights')
 def get_flights():

@@ -50,6 +50,15 @@ def get_flights():
 
 if __name__ == '__main__':
     config = load_config()
+
+    # Check Google Maps Key status for user debugging
+    gmap_key = config['api_keys'].get('google_maps', '')
+    if not gmap_key or "YOUR_" in gmap_key:
+        logger.warning("Google Maps API Key is missing or set to default! Map will not load.")
+    else:
+        masked_key = f"{gmap_key[:4]}...{gmap_key[-4:]}" if len(gmap_key) > 8 else "***"
+        logger.info(f"Loaded Google Maps API Key: {masked_key}")
+
     host = config['server']['host']
     port = config['server']['port']
     logger.info(f"Starting Flight Tracker on http://{host}:{port}")

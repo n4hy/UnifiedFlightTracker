@@ -74,7 +74,24 @@
         ::-webkit-scrollbar-thumb:hover { background: #555; }
 
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}"></script>
+    <script>
+        function gm_authFailure() {
+            var msg = 'Google Maps Authentication Failed. \n\nPlease check the browser console (F12) for specific errors. \nCommon causes: \n1. Invalid API Key \n2. "Maps JavaScript API" not enabled \n3. Billing not enabled on Google Cloud Project';
+            alert(msg);
+            document.getElementById('map').innerHTML = '<div style="padding:20px; color:#d93025; font-weight:bold; text-align:center; padding-top: 100px;">' + msg.replace(/\n/g, '<br>') + '</div>';
+        }
+    </script>
+    {% if not api_key or api_key == "YOUR_GOOGLE_MAPS_API_KEY" %}
+    <script>
+        window.onload = function() {
+            var msg = "Warning: Google Maps API Key is missing or default. \nPlease edit config.yaml to set your key.";
+            document.getElementById('map').innerHTML = '<div style="padding:20px; color:#d93025; font-weight:bold; text-align:center; padding-top: 100px;">' + msg.replace(/\n/g, '<br>') + '</div>';
+            alert(msg);
+        };
+    </script>
+    {% else %}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}" onerror="alert('Failed to load Google Maps script. Check network connection.')"></script>
+    {% endif %}
 </head>
 <body>
 

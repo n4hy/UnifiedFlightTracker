@@ -7,6 +7,28 @@ from .config import load_config
 
 logger = logging.getLogger(__name__)
 
+# Global In-Memory Cache
+# Structure: { "key": (timestamp, data, errors) }
+_api_cache = {}
+
+def get_cached_response(key, ttl):
+    """Returns cached data if valid, else None."""
+    if key in _api_cache:
+        timestamp, data, errors = _api_cache[key]
+        if time.time() - timestamp < ttl:
+            logger.debug(f"Cache Hit for {key}")
+            return data, errors
+    return None
+
+def set_cached_response(key, data, errors):
+    """Stores data in cache."""
+    # Prevent unbounded growth: If cache is too big, clear it.
+    if len(_api_cache) > 100:
+        _api_cache.clear()
+        logger.info("Cache cleared due to size limit.")
+
+    _api_cache[key] = (time.time(), data, errors)
+
 def parse_fa_time(iso_str):
     try:
         # Handle fractional seconds if present by taking only first 19 chars (YYYY-MM-DDTHH:MM:SS)
@@ -24,6 +46,14 @@ def parse_fa_time(iso_str):
 
 def fetch_flightaware(lat, lon, radius_nm):
     config = load_config()
+
+    # Check Cache
+    ttl = config.get('api_caching', {}).get('ttl_seconds', 60)
+    cache_key = f"fa_{lat}_{lon}_{radius_nm}"
+    cached = get_cached_response(cache_key, ttl)
+    if cached:
+        return cached
+
     api_key = config['api_keys'].get('flightaware')
 
     # If key is None (commented out), empty, or default, return empty list cleanly.
@@ -61,6 +91,8 @@ def fetch_flightaware(lat, lon, radius_nm):
                 "type": f.get('aircraft_type', 'Unknown'),
                 "timestamp": ts
             })
+
+        set_cached_response(cache_key, normalized_flights, [])
         return normalized_flights, []
 
     except requests.exceptions.RequestException as e:
@@ -71,13 +103,25 @@ def fetch_flightaware(lat, lon, radius_nm):
                  msg = "400 - Bad Request (Check Query Syntax)"
              else:
                  msg = f"{e.response.status_code} - {e.response.reason}"
-        return [], [f"FlightAware Error: {msg}"]
+
+        errors = [f"FlightAware Error: {msg}"]
+        # We generally don't cache errors for full duration, but we could for a short time.
+        # For simplicity, let's not cache errors so retries happen.
+        return [], errors
     except Exception as e:
         logger.error(f"Unexpected FlightAware Error: {e}")
         return [], [f"FlightAware Error: {str(e)}"]
 
 def fetch_flightradar24(lat, lon, radius_nm):
     config = load_config()
+
+    # Check Cache
+    ttl = config.get('api_caching', {}).get('ttl_seconds', 60)
+    cache_key = f"fr24_{lat}_{lon}_{radius_nm}"
+    cached = get_cached_response(cache_key, ttl)
+    if cached:
+        return cached
+
     token = config['api_keys'].get('flightradar24')
 
     # If token is None (commented out), empty, or default, return empty list cleanly.
@@ -118,6 +162,8 @@ def fetch_flightradar24(lat, lon, radius_nm):
                 "type": f.get('type', 'Unknown'),
                 "timestamp": ts
             })
+
+        set_cached_response(cache_key, normalized_flights, [])
         return normalized_flights, []
 
     except requests.exceptions.RequestException as e:

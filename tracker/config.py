@@ -1,5 +1,11 @@
 import os
-import yaml
+import sys
+
+try:
+    import yaml
+except ImportError:
+    print("Error: PyYAML is missing. Please run: pip install -r requirements.txt")
+    sys.exit(1)
 
 CONFIG_FILE = 'config.yaml'
 

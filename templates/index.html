@@ -168,7 +168,7 @@
         map = new google.maps.Map(document.getElementById("map"), {
             zoom: 9,
             center: startPos,
-            mapId: "{{ map_id }}", // Required for AdvancedMarkerElement
+            // mapId: "{{ map_id }}", // REVERTED: AdvancedMarkerElement blocked on DEMO_MAP_ID
             mapTypeId: 'terrain',
             streetViewControl: false,
             fullscreenControl: false,
@@ -225,11 +225,21 @@
         map.fitBounds(rangeCircle.getBounds());
 
         // Draw/Update House Icon
-        if (observerMarker) observerMarker.map = null;
-        observerMarker = new google.maps.marker.AdvancedMarkerElement({
-            map: map,
+        // REVERTED to google.maps.Marker due to Map ID blocks
+        if (observerMarker) observerMarker.setMap(null);
+        observerMarker = new google.maps.Marker({
             position: pos,
-            content: createHouseElement(),
+            map: map,
+            // Use SVG path for icon
+            icon: {
+                path: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
+                fillColor: "#0F9D58",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#FFFFFF",
+                scale: 1.5,
+                anchor: new google.maps.Point(12, 12)
+            },
             title: "Observer Location",
             zIndex: 1000
         });
@@ -276,7 +286,7 @@
         
         for (let hex in markers) {
             if (!currentHexIds.has(hex)) {
-                markers[hex].map = null;
+                markers[hex].setMap(null);
                 delete markers[hex];
             }
         }
@@ -290,17 +300,25 @@
             
             const contentString = `<div style="color:black"><b>${f.callsign}</b><br>Hex: ${f.hex_id}</div>`;
 
+            const icon = {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 4,
+                fillColor: color,
+                fillOpacity: 1,
+                strokeWeight: 1,
+                rotation: f.heading
+            };
+
             if (markers[f.hex_id]) {
-                markers[f.hex_id].position = pos;
-                // Update rotation and color by replacing content or transforming it
-                // Re-creating content is safest for color changes
-                markers[f.hex_id].content = createPlaneElement(color, f.heading);
+                markers[f.hex_id].setPosition(pos);
+                markers[f.hex_id].setIcon(icon);
                 markers[f.hex_id]._infoContent = contentString;
             } else {
-                const marker = new google.maps.marker.AdvancedMarkerElement({
-                    map: map,
+                // REVERTED to google.maps.Marker
+                const marker = new google.maps.Marker({
                     position: pos,
-                    content: createPlaneElement(color, f.heading),
+                    map: map,
+                    icon: icon,
                     title: f.callsign
                 });
 

@@ -1,6 +1,6 @@
 import logging
 from flask import Flask, render_template, request, jsonify
-from tracker.config import load_config
+from tracker.config import load_config, DEFAULT_CONFIG
 from tracker.api import fetch_flightaware, fetch_flightradar24
 from tracker.local import fetch_local_data
 from tracker.core import deconflict_data
@@ -15,8 +15,12 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     config = load_config()
+    api_key = config['api_keys'].get('google_maps', '')
+    is_default = (api_key == DEFAULT_CONFIG['api_keys']['google_maps'])
+
     return render_template('index.html',
-                          api_key=config['api_keys'].get('google_maps', ''),
+                          api_key=api_key,
+                          is_default_key=is_default,
                           default_lat=config['observer']['latitude'],
                           default_lon=config['observer']['longitude'],
                           default_radius=config['observer']['radius_nm'])

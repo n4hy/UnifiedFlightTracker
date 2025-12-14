@@ -175,6 +175,7 @@
     let rangeCircle;
     let observerMarker; // House icon marker
     let refreshInterval;
+    let zoomTimeout; // Timer for zoom controls
     
     // Sort State: { col: string, dir: number } (0: none, 1: asc, 2: desc)
     let sortState = { col: null, dir: 0 };
@@ -213,8 +214,23 @@
             mapTypeId: 'terrain',
             streetViewControl: false,
             fullscreenControl: false,
+            zoomControl: false, // Initially hidden
+            zoomControlOptions: { position: google.maps.ControlPosition.BOTTOM_RIGHT },
             mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT }
         });
+
+        // Show Zoom Controls on interaction
+        const showZoom = () => {
+            map.setOptions({ zoomControl: true });
+            if (zoomTimeout) clearTimeout(zoomTimeout);
+            zoomTimeout = setTimeout(() => {
+                map.setOptions({ zoomControl: false });
+            }, 10000);
+        };
+
+        map.addListener("click", showZoom);
+        map.addListener("drag", showZoom);
+        map.addListener("zoom_changed", showZoom);
         
         drawObserver(startPos.lat, startPos.lng, {{ default_radius }});
 

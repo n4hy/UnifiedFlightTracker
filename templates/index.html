@@ -185,6 +185,8 @@
     // View State
     let currentView = 'map'; // 'map' or 'sky'
     let skyCanvas, skyCtx;
+    let selectedHexId = null;
+    let skyAnimationId = null;
 
     const planeIcon = {
         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
@@ -256,8 +258,9 @@
         document.getElementById('sky-view').style.display = view === 'sky' ? 'block' : 'none';
 
         if (view === 'sky') {
-            resizeSkyCanvas();
-            drawSkyView(flightCache);
+            startSkyAnimation();
+        } else {
+            stopSkyAnimation();
         }
     }
 
@@ -326,7 +329,9 @@
             flightCache = data.flights; // Store for sorting/rendering
 
             updateMarkers(data.flights);
-            if (currentView === 'sky') drawSkyView(data.flights);
+            // In Sky View, the animation loop handles drawing.
+            // If we are NOT in Sky View, we don't draw.
+            // If we ARE in Sky View, the loop picks up the new data automatically.
 
             renderTable(); // Render based on cache and sort state
             
@@ -377,10 +382,29 @@
     }
 
     // --- SKY VIEW LOGIC ---
+    function startSkyAnimation() {
+        if (skyAnimationId) cancelAnimationFrame(skyAnimationId);
+        resizeSkyCanvas();
+
+        const loop = () => {
+            drawSkyView(flightCache);
+            skyAnimationId = requestAnimationFrame(loop);
+        };
+        loop();
+    }
+
+    function stopSkyAnimation() {
+        if (skyAnimationId) {
+            cancelAnimationFrame(skyAnimationId);
+            skyAnimationId = null;
+        }
+    }
+
     function resizeSkyCanvas() {
         const parent = document.getElementById('sky-view');
         skyCanvas.width = parent.clientWidth;
         skyCanvas.height = parent.clientHeight;
+        // Draw once immediately if resizing
         if (currentView === 'sky') drawSkyView(flightCache);
     }
 
@@ -499,6 +523,19 @@
             skyCtx.lineTo(x + 10 * Math.sin(f.heading * Math.PI/180), y - 10 * Math.cos(f.heading * Math.PI/180));
             skyCtx.strokeStyle = color;
             skyCtx.stroke();
+
+            // Blinking Effect for Selected Plane
+            if (f.hex_id === selectedHexId) {
+                const now = Date.now();
+                // Pulse radius between 8 and 14
+                const pulseRadius = 8 + 6 * Math.abs(Math.sin(now / 300));
+
+                skyCtx.beginPath();
+                skyCtx.arc(x, y, pulseRadius, 0, 2 * Math.PI);
+                skyCtx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                skyCtx.lineWidth = 2;
+                skyCtx.stroke();
+            }
         });
     }
 
@@ -609,6 +646,8 @@
             
             // Highlight marker on hover/click
             tr.onclick = () => {
+                selectedHexId = f.hex_id;
+
                 // If on Sky View, could highlight there too, but mostly for Map
                 if (currentView === 'map' && markers[f.hex_id]) {
                     const m = markers[f.hex_id];

@@ -1,0 +1,14 @@
+2025-12-14 00:00:09,296 - __main__ - INFO - Starting Flight Tracker on http://0.0.0.0:5000
+ * Serving Flask app 'app'
+ * Debug mode: on
+2025-12-14 00:00:09,424 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.2:5000
+2025-12-14 00:00:09,424 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-12-14 00:00:09,425 - werkzeug - INFO -  * Restarting with stat
+2025-12-14 00:00:09,762 - __main__ - INFO - Starting Flight Tracker on http://0.0.0.0:5000
+2025-12-14 00:00:09,780 - werkzeug - WARNING -  * Debugger is active!
+2025-12-14 00:00:09,782 - werkzeug - INFO -  * Debugger PIN: 969-355-207
+2025-12-14 00:00:24,206 - werkzeug - INFO - 127.0.0.1 - - [14/Dec/2025 00:00:24] "GET / HTTP/1.1" 200 -
+2025-12-14 00:00:25,157 - werkzeug - INFO - 127.0.0.1 - - [14/Dec/2025 00:00:25] "GET /api/flights?lat=39.0&lon=-75.0&radius=50 HTTP/1.1" 200 -

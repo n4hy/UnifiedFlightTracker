@@ -65,7 +65,7 @@ def calculate_az_el(obs_lat, obs_lon, obs_alt_m, target_lat, target_lon, target_
     # The angle calculated directly by Law of Cosines using r_t opposite is the angle at O between OC (Down) and OT.
     # We want the angle between CO (Up) and OT.
     # cos(angle_internal) = (r_obs^2 + s^2 - r_target^2) / (2 * r_obs * s)
-    # cos(zenith) = -cos(angle_internal) = (r_target^2 - r_obs^2 - s^2) / (2 * r_obs * s)
+    # cos(zenith) = -cos(angle_internal) = (r_target^2 - r_obs^2 - s_sq) / (2 * r_obs * s)
 
     cos_phi = (r_target**2 - r_obs**2 - s_sq) / (2 * r_obs * s)
 

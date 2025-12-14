@@ -30,6 +30,7 @@ Code by Jules and me.
   - **Right Panel:** Full-screen Google Map with range rings + directional aircraft icons
 
 - **Observer-Centric Tracking** - Computes real-time bearing and distance (NM) from your configured observer location.
+- **Sky View (All-Sky Map)** - Visualizes aircraft on a polar plot relative to your position (Zenith at center), showing Azimuth and Elevation.
 
 ---
 
@@ -108,8 +109,9 @@ local_sources:
   dump978: "http://localhost:8978/data/aircraft.json"  # Or /run/dump978-fa/aircraft.json
 
 observer:
-  latitude: 39.8729      # Your latitude
-  longitude: -75.2437    # Your longitude
+  latitude: 39.0         # Your latitude
+  longitude: -75.0       # Your longitude
+  altitude_m: 0          # Your altitude (meters) for accurate elevation calc
   radius_nm: 50          # Range ring radius (nautical miles)
 ```
 
@@ -146,8 +148,7 @@ http://localhost:5000
 To run the unit tests for the core logic and utilities:
 
 ```bash
-python tests/test_logic.py
-python tests/test_local.py
+python -m unittest discover tests
 ```
 
 ---

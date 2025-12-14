@@ -145,6 +145,7 @@
                         <th class="col-right" onclick="toggleSort('azimuth')">Az <span id="sort-azimuth" class="sort-icon"></span></th>
                         <th class="col-right" onclick="toggleSort('elevation')">El <span id="sort-elevation" class="sort-icon"></span></th>
                         <th class="col-right" onclick="toggleSort('distance_from_obs')">Dist (NM) <span id="sort-distance_from_obs" class="sort-icon"></span></th>
+                        <th onclick="toggleSort('source')">Src <span id="sort-source" class="sort-icon"></span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -603,6 +604,7 @@
                 <td class="col-right">${f.azimuth !== undefined ? f.azimuth.toFixed(0) : 0}°</td>
                 <td class="col-right">${f.elevation !== undefined ? f.elevation.toFixed(1) : 0}°</td>
                 <td class="col-right">${distDisplay}</td>
+                <td>${sourceHtml}</td>
             `;
             
             // Highlight marker on hover/click

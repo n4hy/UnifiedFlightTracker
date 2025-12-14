@@ -131,7 +131,7 @@
         }
 
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&loading=async" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&loading=async&callback=initMap" async defer></script>
 </head>
 <body>
 
@@ -207,27 +207,31 @@
     let selectedHexId = null;
     let skyAnimationId = null;
 
-    const planeIcon = {
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        scale: 4,
-        fillColor: "#4285F4",
-        fillOpacity: 1,
-        strokeWeight: 1,
-        rotation: 0
-    };
-
-    const houseIcon = {
-        // SVG path for a simple house
-        path: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
-        fillColor: "#0F9D58", // Green
-        fillOpacity: 1,
-        strokeWeight: 2,
-        strokeColor: "#FFFFFF",
-        scale: 1.5,
-        anchor: new google.maps.Point(12, 12) // Center the icon roughly
-    };
+    // Icons (initialized in initMap to ensure google is defined)
+    let planeIcon;
+    let houseIcon;
 
     function initMap() {
+        planeIcon = {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 4,
+            fillColor: "#4285F4",
+            fillOpacity: 1,
+            strokeWeight: 1,
+            rotation: 0
+        };
+
+        houseIcon = {
+            // SVG path for a simple house
+            path: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
+            fillColor: "#0F9D58", // Green
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "#FFFFFF",
+            scale: 1.5,
+            anchor: new google.maps.Point(12, 12) // Center the icon roughly
+        };
+
         // Map Init
         const startPos = { lat: {{ default_lat }}, lng: {{ default_lon }} }; 
         map = new google.maps.Map(document.getElementById("map"), {
@@ -688,7 +692,6 @@
         }
     }
 
-    window.onload = initMap;
 </script>
 </body>
 </html>
